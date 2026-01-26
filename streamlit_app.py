@@ -85,7 +85,7 @@ def page_home():
             var1, var2, var3, var4 = st.session_state['selected_players']    
             st.success(f'Active: {var1},{var2},{var3},{var4}')
         else:
-            text_filler = 'Number of players incorrect'
+            text_filler = 'Please enter four players.'
             st.error(f':red[{text_filler}]')
 
     st.write("Add Game Results")
@@ -123,10 +123,10 @@ def page_home():
         #Submit and delete last game buttons
         colA, colB = st.columns([3,1])
         with colB:
-            OK_confirm_game_button = st.form_submit_button("➕ OK")
+            OK_confirm_game_button = st.form_submit_button("🆗 OK")
 
         with colA:
-            DEL_last_game_button = st.form_submit_button("↩️ Undo Last Game")
+            DEL_last_game_button = st.form_submit_button("⏪ Undo Last Game")
 
         if OK_confirm_game_button:
             if winner == loser:
@@ -178,7 +178,7 @@ def page_home():
             pass
 
 def page_player_settings():
-    st.title("🚻 Player Settings")
+    st.title("👤 Players")
 
     st.write("Add/Remove Players")
     player_name_label = "Insert Player Name"
@@ -191,10 +191,10 @@ def page_player_settings():
                                             label_visibility='collapsed')
 
         with col2:    
-            ADD_button_player_name = st.form_submit_button("Add")
+            ADD_button_player_name = st.form_submit_button("▶️ Add")
 
         with col3:
-            RESET_button_player_name = st.form_submit_button("Reset")
+            RESET_button_player_name = st.form_submit_button("⏪ Reset")
         
         if ADD_button_player_name:
             new_player_name_cleansed = new_player_name.strip().upper()
@@ -211,7 +211,7 @@ def page_player_settings():
     st.dataframe(st.session_state['player_df'])    
 
 def page_point_scoring():
-    st.title("🎲 Points Scoring")
+    st.title("⚙️ Settings")
     
     with st.form("multiplier_form"):
         multiplier = st.selectbox(
@@ -283,25 +283,25 @@ def mahjong_remove_last_line():
 def main():
     selected = option_menu(
         menu_title=None,
-        options=["Home", "Players", "Settings"],
+        options=["Calculate", "Players", "Settings"],
         icons=["house", "person", "gear"],
         menu_icon="cast",
         default_index=0,
         orientation="horizontal",
         styles={
-            "container": {"padding": "0!important", "background-color": "#fafafa"},
-            "icon": {"color": "orange", "font-size": "20px"},
+            "container": {"padding": "0!important", "background-color": "#b5b0b0"},
+            "icon": {"color": "#043801", "font-size": "20px"},
             "nav-link": {
                 "font-size": "16px",
                 "text-align": "center",
                 "margin": "0px",
-                "--hover-color": "#eee",
+                "--hover-color": "#787474",
             },
             "nav-link-selected": {"background-color": "green"},
         }
     )
 
-    if selected == "Home":
+    if selected == "Calculate":
         page_home()
     elif selected == "Players":
         page_player_settings()
