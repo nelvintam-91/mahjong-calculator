@@ -78,14 +78,15 @@ def page_home():
     with st.form("active_player_form"):
         st.multiselect("Select 4 players",
                        st.session_state['base_player_list_dedup'],
-                       key="selected_players"
+                       key="selected_players",
+                       placeholder="Choose 4 players"
                       )
         confirm_button = st.form_submit_button(label='Confirm')
         if len(st.session_state['selected_players']) == 4 or confirm_button:
             var1, var2, var3, var4 = st.session_state['selected_players']    
             st.success(f'Active: {var1},{var2},{var3},{var4}')
         else:
-            text_filler = 'Please enter four players.'
+            text_filler = 'Please select four players'
             st.error(f':red[{text_filler}]')
 
     st.write("Add Game Results")
@@ -169,7 +170,7 @@ def page_home():
         st.write(get_data(conn))
 
     with st.form("reset_form"):
-        RESET_game_button = st.form_submit_button("DOUBLE CLICK TO RESET")
+        RESET_game_button = st.form_submit_button("🔄 DOUBLE CLICK TO RESET")
         try:
             if RESET_game_button:
                 del_data(conn)
@@ -194,7 +195,7 @@ def page_player_settings():
             ADD_button_player_name = st.form_submit_button("▶️ Add")
 
         with col3:
-            RESET_button_player_name = st.form_submit_button("⏪ Reset")
+            RESET_button_player_name = st.form_submit_button("🔄 Reset")
         
         if ADD_button_player_name:
             new_player_name_cleansed = new_player_name.strip().upper()
