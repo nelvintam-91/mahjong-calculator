@@ -104,7 +104,7 @@ def page_home():
             loser = st.selectbox("Loser",
                         st.session_state['selected_players'],
                         index=None,
-                        placeholder='(blank) if 自摸'
+                        placeholder='(leave blank if 自摸)'
                         ) 
 
         with col3:
