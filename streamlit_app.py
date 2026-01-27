@@ -76,13 +76,15 @@ def page_home():
 
     st.write("Active Players")
     with st.form("active_player_form"):
-        st.multiselect("Select 4 players",
+        st.pills("Select 4 players",
                        st.session_state['base_player_list_dedup'],
                        key="selected_players",
-                       placeholder="Choose 4 players"
+                       selection_mode='multi',
+                       default=None,
+                       width='stretch'
                       )
         confirm_button = st.form_submit_button(label='Confirm')
-        if len(st.session_state['selected_players']) == 4 or confirm_button:
+        if len(st.session_state['selected_players']) == 4 and confirm_button:
             var1, var2, var3, var4 = st.session_state['selected_players']    
             st.success(f'Active: {var1},{var2},{var3},{var4}')
         else:
@@ -94,31 +96,35 @@ def page_home():
         col1, col2, col3, col4 = st.columns([1,1,1,1])
 
         with col1:
-            winner = st.selectbox("Winner",
+            winner = st.pills("Winner",
                         st.session_state['selected_players'],
-                        index=None,
-                        placeholder='(blank)'
+                        selection_mode='single',
+                        default=None,
+                        width='stretch'
                         )
 
         with col2:
-            loser = st.selectbox("Loser",
+            loser = st.pills("Loser (leave blank if 自摸)",
                         st.session_state['selected_players'],
-                        index=None,
-                        placeholder='(leave blank if 自摸)'
+                        selection_mode='single',
+                        default=None,
+                        width='stretch'
                         ) 
 
         with col3:
-            win_type = st.selectbox("Type",
-                        ['出銃','自摸','包自摸'],
-                        index=None,
-                        placeholder='(blank)'
+            win_type = st.pills("Type",
+                        ['出銃','包自摸','自摸'],
+                        selection_mode='single',
+                        default=None
+                        ,width='stretch'
                         )   
 
         with col4:
-            points = st.selectbox("Points",
+            points = st.pills("Points",
                         [3,4,5,6,7,8,9,10],
-                        index=None,
-                        placeholder='(blank)'
+                        selection_mode='single',
+                        default=None,
+                        width='stretch'
                         )    
     
         #Submit and delete last game buttons
