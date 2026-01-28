@@ -310,8 +310,10 @@ def mahjong_remove_last_line():
         pass
 
 def results_tile(name, amount):
-    if amount >= 0:
+    if amount > 0:
         color = "#10b981"  # Green
+    elif amount == 0:
+        color = "#808080"  #Grey
     else:
         color = "#ef4444"  # Red
     formatted_amount = f"${abs(amount):,.2f}"
