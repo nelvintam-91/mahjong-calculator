@@ -184,13 +184,16 @@ def page_home():
             name = overall_results_dict[x]['Player']
             amount = overall_results_dict[x]['Amount']
             results_tile(name, amount)
-    else:
-        st.success('No games recorded')
-
 
         st.divider()
         st.write("Game by Game Results")
         st.write(get_data(conn))
+        
+    else:
+        st.success('No games recorded')
+
+
+        
 
     st.divider()
     with st.form("reset_form"):
