@@ -72,7 +72,7 @@ def reset_data(conn):
 
 # --- PAGE FUNCTIONS ---
 def page_home():
-    st.title("🀄 Mahjong Calculator")
+    st.title(":material/calculate: Mahjong Calculator")
 
     st.write("Active Players")
     with st.form("active_player_form"):
@@ -83,7 +83,7 @@ def page_home():
                        default=None,
                        width='stretch'
                       )
-        confirm_button = st.form_submit_button(label='Confirm')
+        confirm_button = st.form_submit_button(label=':material/person_check: Confirm')
         if len(st.session_state['selected_players']) == 4 and confirm_button:
             var1, var2, var3, var4 = st.session_state['selected_players']    
             st.success(f'Active: {var1},{var2},{var3},{var4}')
@@ -91,13 +91,19 @@ def page_home():
             text_filler = 'Please select four players'
             st.error(f':red[{text_filler}]')
 
+    st.divider()
     st.write("Add Game Results")
     with st.form("game_result_form", clear_on_submit=True):
         col1, col2, col3, col4 = st.columns([1,1,1,1])
 
+        if len(st.session_state['selected_players']) != 4:
+            players_list = ['(blank)','(blank)','(blank)','(blank)']
+        else:
+            players_list = st.session_state['selected_players']
+
         with col1:
             winner = st.pills("Winner",
-                        st.session_state['selected_players'],
+                        players_list,
                         selection_mode='single',
                         default=None,
                         width='stretch'
@@ -105,7 +111,7 @@ def page_home():
 
         with col2:
             loser = st.pills("Loser (leave blank if 自摸)",
-                        st.session_state['selected_players'],
+                        players_list,
                         selection_mode='single',
                         default=None,
                         width='stretch'
@@ -130,10 +136,10 @@ def page_home():
         #Submit and delete last game buttons
         colA, colB = st.columns([3,1])
         with colB:
-            OK_confirm_game_button = st.form_submit_button("🆗 OK")
+            OK_confirm_game_button = st.form_submit_button(":material/add_box: Add Game")
 
         with colA:
-            DEL_last_game_button = st.form_submit_button("⏪ Undo Last Game")
+            DEL_last_game_button = st.form_submit_button(":material/backspace: Undo Last Game")
 
         if OK_confirm_game_button:
             if winner == loser:
@@ -167,16 +173,26 @@ def page_home():
                 st.success('No lines to delete.')
 
     #Calculation of winnings/losings
+    st.divider()
+    st.write("Overall Results")
     mahjong_calculator()
     total_amount_df = pd.DataFrame(st.session_state['calculator_master'])
     if len(st.session_state['calculator_master']) > 0:
-        total_amount = total_amount_df.groupby('Player').sum()        
-        st.dataframe(total_amount.style.format({'Amount':'{:.2f}'}))
+        overall_results = total_amount_df.groupby('Player')['Amount'].sum().round(2).reset_index()
+        overall_results_dict = overall_results.to_dict('records') 
+        for x in range(0, len(overall_results_dict)):
+            name = overall_results_dict[x]['Player']
+            amount = overall_results_dict[x]['Amount']
+            results_tile(name, amount)
 
+
+        st.divider()
+        st.write("Game by Game Results")
         st.write(get_data(conn))
 
+    st.divider()
     with st.form("reset_form"):
-        RESET_game_button = st.form_submit_button("🔄 DOUBLE CLICK TO RESET")
+        RESET_game_button = st.form_submit_button(":material/reset_settings: DOUBLE CLICK TO RESET")
         try:
             if RESET_game_button:
                 del_data(conn)
@@ -185,7 +201,7 @@ def page_home():
             pass
 
 def page_player_settings():
-    st.title("👤 Players")
+    st.title(":material/person: Players")
 
     st.write("Add/Remove Players")
     player_name_label = "Insert Player Name"
@@ -198,19 +214,21 @@ def page_player_settings():
                                             label_visibility='collapsed')
 
         with col2:    
-            ADD_button_player_name = st.form_submit_button("▶️ Add")
+            ADD_button_player_name = st.form_submit_button(":material/person_add: Add")
 
         with col3:
-            RESET_button_player_name = st.form_submit_button("🔄 Reset")
+            RESET_button_player_name = st.form_submit_button(":material/reset_settings: Reset")
         
         if ADD_button_player_name:
             new_player_name_cleansed = new_player_name.strip().upper()
             if 'base_player_list' not in st.session_state:
                 st.session_state['base_player_list'] = ['NEL','WAI','CAM','BOS','LIL','LIS','AMA','JEN']
             st.session_state['base_player_list'].append(new_player_name_cleansed)
+            st.success(f'Welcome to the den, {new_player_name_cleansed}.')
 
         if RESET_button_player_name:
             st.session_state['base_player_list'] = ['NEL','WAI','CAM','BOS','LIL','LIS','AMA','JEN']
+            st.success(f'Reset to default players.')
 
     st.session_state['base_player_list_dedup'] = list(set(st.session_state['base_player_list']))
     st.session_state['base_player_list_dedup'].sort()
@@ -218,7 +236,7 @@ def page_player_settings():
     st.dataframe(st.session_state['player_df'])    
 
 def page_point_scoring():
-    st.title("⚙️ Settings")
+    st.title(":material/settings: Settings")
     
     with st.form("multiplier_form"):
         multiplier = st.selectbox(
@@ -284,7 +302,37 @@ def mahjong_remove_last_line():
     except Exception as e:
         pass
 
+def results_tile(name, amount):
+    if amount >= 0:
+        color = "#10b981"  # Green
+    else:
+        color = "#ef4444"  # Red
+    formatted_amount = f"${abs(amount):,.2f}"
+    sign = "+" if amount > 0 else "-" if amount < 0 else ""
 
+    st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 4px solid {color};
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 180;
+        ">
+            <div style="
+                font-size: 14px;
+                color: #64748b;
+                font-weight: 500;
+                margin-bottom: 8px;
+            ">{name}</div>
+            <div style="
+                font-size: 32px;
+                color: {color};
+                font-weight: 700;
+            ">{sign}{formatted_amount}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # --- MAIN APP ---
 def main():
