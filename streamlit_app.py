@@ -184,6 +184,8 @@ def page_home():
             name = overall_results_dict[x]['Player']
             amount = overall_results_dict[x]['Amount']
             results_tile(name, amount)
+    else:
+        st.success('No games recorded')
 
 
         st.divider()
