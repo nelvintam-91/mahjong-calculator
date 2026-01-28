@@ -81,7 +81,7 @@ def page_home():
                        key="selected_players",
                        selection_mode='multi',
                        default=None,
-                       width='stretch'
+                       width='content'
                       )
         confirm_button = st.form_submit_button(label=':material/person_check: Confirm')
         if len(st.session_state['selected_players']) == 4 and confirm_button:
@@ -204,6 +204,8 @@ def page_home():
                 st.success('Game results have been reset.')
         except:
             pass
+
+        
 
 def page_player_settings():
     st.title(":material/person: Players")
@@ -343,8 +345,8 @@ def results_tile(name, amount):
 def main():
     selected = option_menu(
         menu_title=None,
-        options=["Calculate", "Players", "Settings"],
-        icons=["house", "person", "gear"],
+        options=["Calc", "User", "Menu", "Stats"],
+        icons=["calculator", "person", "gear", "bar-chart-line"],
         menu_icon="cast",
         default_index=0,
         orientation="horizontal",
@@ -361,12 +363,18 @@ def main():
         }
     )
 
-    if selected == "Calculate":
+    if selected == "Calc":
         page_home()
-    elif selected == "Players":
+        st.divider()
+        st.caption('V1.1.0 © Nelvin Tam')
+    elif selected == "User":
         page_player_settings()
-    elif selected == "Settings":
+        st.divider()
+        st.caption('V1.1.0 © Nelvin Tam')
+    elif selected == "Menu":
         page_point_scoring()
+        st.divider()
+        st.caption('V1.1.0 © Nelvin Tam')
 
     
 
