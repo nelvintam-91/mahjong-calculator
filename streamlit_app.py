@@ -533,7 +533,7 @@ def page_awards():
             self_draw_name += f', {self_draw_name_list[x]}'   
     st.subheader(':material/self_improvement: Self Draw King/Queen')
     st.write(f'Games won: {self_draw_count:,.2f} | Players: {self_draw_name}')   
-    st.divider()
+
 
 
 
