@@ -475,64 +475,78 @@ def page_awards():
     st.divider()
 
     #Innocent Bystander
-    max_self_draw_loss_count, max_self_draw_loss_name_list = award_innocent_bystander(conn)
-    max_self_draw_loss_name = ''
-    for x in range(0,len(max_self_draw_loss_name_list)):
-        if x == 0:
-            max_self_draw_loss_name = max_self_draw_loss_name_list[x]
-        else:
-            max_self_draw_loss_name += f', {max_self_draw_loss_name_list[x]}'
-
     st.subheader(':material/assist_walker: Innocent Bystander')
-    st.write(f'Number of Games: {max_self_draw_loss_count} | Players: {max_self_draw_loss_name}')
+    try:
+        max_self_draw_loss_count, max_self_draw_loss_name_list = award_innocent_bystander(conn)
+        max_self_draw_loss_name = ''
+        for x in range(0,len(max_self_draw_loss_name_list)):
+            if x == 0:
+                max_self_draw_loss_name = max_self_draw_loss_name_list[x]
+            else:
+                max_self_draw_loss_name += f', {max_self_draw_loss_name_list[x]}'
+        st.write(f'Number of Games: {max_self_draw_loss_count} | Players: {max_self_draw_loss_name}')
+    except:
+        st.error('No data')
     st.divider()
 
     #Arch Nemesis
-    max_arch_nemesis_count, max_arch_nemesis_name_list = award_arch_nemesis(conn)
-    max_arch_nemesis_name = ''
-    for x in range(0,len(max_arch_nemesis_name_list)):
-        if x == 0:
-            max_arch_nemesis_name = max_arch_nemesis_name_list[x]
-        else:
-            max_arch_nemesis_name += f', {max_arch_nemesis_name_list[x]}'   
     st.subheader(':material/sports_kabaddi: Arch Nemesis')
-    st.write(f'Number of Games: {max_arch_nemesis_count} | Players: {max_arch_nemesis_name}')
+    try:
+        max_arch_nemesis_count, max_arch_nemesis_name_list = award_arch_nemesis(conn)
+        max_arch_nemesis_name = ''
+        for x in range(0,len(max_arch_nemesis_name_list)):
+            if x == 0:
+                max_arch_nemesis_name = max_arch_nemesis_name_list[x]
+            else:
+                max_arch_nemesis_name += f', {max_arch_nemesis_name_list[x]}'   
+        st.write(f'Number of Games: {max_arch_nemesis_count} | Players: {max_arch_nemesis_name}')
+    except:
+        st.error('No data')
     st.divider()
 
     #Go Big or Go Home
-    big_boy_count, big_boy_name_list = award_big(conn)
-    big_boy_name = ''
-    for x in range(0,len(big_boy_name_list)):
-        if x == 0:
-            big_boy_name = big_boy_name_list[x]
-        else:
-            big_boy_name += f', {big_boy_name_list[x]}'   
     st.subheader(':material/trending_up: Go Big or Go Home')
-    st.write(f'Average Points: {big_boy_count:,.2f} | Players: {big_boy_name}')
+    try:
+        big_boy_count, big_boy_name_list = award_big(conn)
+        big_boy_name = ''
+        for x in range(0,len(big_boy_name_list)):
+            if x == 0:
+                big_boy_name = big_boy_name_list[x]
+            else:
+                big_boy_name += f', {big_boy_name_list[x]}'   
+        st.write(f'Average Points: {big_boy_count:,.2f} | Players: {big_boy_name}')
+    except:
+        st.error('No data')
     st.divider()
 
     #Charity Champion
-    charity_count, charity_name_list = award_charity(conn)
-    charity_name = ''
-    for x in range(0,len(charity_name_list)):
-        if x == 0:
-            charity_name = charity_name_list[x]
-        else:
-            charity_name += f', {charity_name_list[x]}'   
     st.subheader(':material/volunteer_activism: Charity Champion')
-    st.write(f'Games donated: {charity_count:,.2f} | Players: {charity_name}')   
+    try:
+        charity_count, charity_name_list = award_charity(conn)
+        charity_name = ''
+        for x in range(0,len(charity_name_list)):
+            if x == 0:
+                charity_name = charity_name_list[x]
+            else:
+                charity_name += f', {charity_name_list[x]}'   
+        st.write(f'Games donated: {charity_count:,.2f} | Players: {charity_name}')   
+    except:
+        st.error('No data')
     st.divider()
 
     #Self Draw King/Queen
-    self_draw_count, self_draw_name_list = award_selfdraw(conn)
-    self_draw_name = ''
-    for x in range(0,len(self_draw_name_list)):
-        if x == 0:
-            self_draw_name = self_draw_name_list[x]
-        else:
-            self_draw_name += f', {self_draw_name_list[x]}'   
     st.subheader(':material/self_improvement: Self Draw King/Queen')
-    st.write(f'Games won: {self_draw_count:,.2f} | Players: {self_draw_name}')   
+    try:
+        self_draw_count, self_draw_name_list = award_selfdraw(conn)
+        self_draw_name = ''
+        for x in range(0,len(self_draw_name_list)):
+            if x == 0:
+                self_draw_name = self_draw_name_list[x]
+            else:
+                self_draw_name += f', {self_draw_name_list[x]}'   
+        st.write(f'Games won: {self_draw_count:,.2f} | Players: {self_draw_name}')   
+    except:
+        st.error('No data')
 
 
 
