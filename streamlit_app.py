@@ -3,6 +3,43 @@ import pandas as pd
 import sqlite3
 from streamlit_option_menu import option_menu
 
+
+# --- RESULT TILES ---
+def results_tile(name, amount):
+    if amount > 0:
+        color = "#10b981"  # Green
+    elif amount == 0:
+        color = "#808080"  #Grey
+    else:
+        color = "#ef4444"  # Red
+    formatted_amount = f"${abs(amount):,.2f}"
+    sign = "+" if amount > 0 else "-" if amount < 0 else ""
+
+    st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 4px solid {color};
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 180;
+        ">
+            <div style="
+                font-size: 14px;
+                color: #64748b;
+                font-weight: 500;
+                margin-bottom: 8px;
+            ">{name}</div>
+            <div style="
+                font-size: 32px;
+                color: {color};
+                font-weight: 700;
+            ">{sign}{formatted_amount}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
 # --- DATABASE CONNECTION ---
 DB_NAME = 'mahjong_app.db'
 TABLE_NAME = 'game_log'
@@ -68,7 +105,140 @@ def reset_data(conn):
     ''')
     conn.commit()    
 
-    
+def mahjong_remove_last_line():
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            f"DELETE FROM {TABLE_NAME} WHERE ID = (SELECT MAX(ID) FROM {TABLE_NAME})"
+        )
+        conn.commit()
+    except Exception as e:
+        pass
+
+def award_innocent_bystander(conn):
+    try:
+        query = f"""
+                    WITH Losers AS (SELECT Loser1 AS LoserName
+                        FROM {TABLE_NAME} 
+                        WHERE WinType = '自摸'
+                    UNION ALL
+                    SELECT Loser2
+                        FROM {TABLE_NAME} 
+                        WHERE WinType = '自摸'
+                    UNION ALL
+                    SELECT Loser3
+                        FROM {TABLE_NAME}
+                        WHERE WinType = '自摸')
+                    ,Losers2 AS (                    
+                    SELECT LoserName
+                          ,COUNT(LoserName) AS LossCount
+                        FROM Losers
+                        GROUP BY LoserName)
+                    SELECT *
+                        FROM Losers2
+                        WHERE LossCount = (SELECT MAX(LossCount) FROM Losers2)        
+                 """
+        df = pd.read_sql(query, conn)
+        max_self_draw_loss_count = df.iloc[0]['LossCount']
+        max_self_draw_loss_name = df['LoserName'].to_list()
+        return max_self_draw_loss_count, max_self_draw_loss_name
+    except Exception as e:
+        st.error(f"Error retrieving data: {e}")
+        return None, None 
+
+def award_arch_nemesis(conn):
+    try:
+        query = f"""
+                    WITH ARCHN1 AS (
+                    SELECT Winner
+                          ,Loser1
+                          ,CASE WHEN Winner < Loser1 THEN Winner || '-' || Loser1 ELSE Loser1 || '-' || Winner END AS alpha_pair
+                        FROM {TABLE_NAME} 
+                        WHERE WinType <> '自摸')
+                    ,ARCHN2 AS (                    
+                    SELECT alpha_pair
+                          ,COUNT(alpha_pair) AS LossCount
+                        FROM ARCHN1
+                        GROUP BY alpha_pair)
+                    SELECT *
+                        FROM ARCHN2
+                        WHERE LossCount = (SELECT MAX(LossCount) FROM ARCHN2)    
+                 """
+        df = pd.read_sql(query, conn)
+        max_arch_nemesis_count = df.iloc[0]['LossCount']
+        max_arch_nemesis_name = df['alpha_pair'].to_list()
+        return max_arch_nemesis_count, max_arch_nemesis_name     
+    except Exception as e:
+        st.error(f"Error retrieving data: {e}")
+        return None, None  
+
+
+def award_big(conn):
+    try:
+        query = f"""
+                    WITH BIG_PTS AS (
+                    SELECT Winner
+                          ,AVG(Points) AS Avg_Pts
+                        FROM {TABLE_NAME} 
+                        GROUP BY Winner)
+                    SELECT *
+                        FROM BIG_PTS
+                        WHERE Avg_Pts = (SELECT MAX(Avg_Pts) FROM BIG_PTS)    
+                 """
+        df = pd.read_sql(query, conn)
+        big_boy_count = df.iloc[0]['Avg_Pts']
+        big_boy_name = df['Winner'].to_list()
+        return big_boy_count, big_boy_name     
+    except Exception as e:
+        st.error(f"Error retrieving data: {e}")
+        return None, None  
+
+def award_charity(conn):
+    try:
+        query = f"""
+                    WITH CHARITY AS (
+                    SELECT Loser1
+                          ,COUNT(Loser1) AS Charity_Count
+                        FROM {TABLE_NAME} 
+                        WHERE WinType <> '自摸'
+                        GROUP BY Loser1
+                        )
+                    SELECT *
+                        FROM CHARITY
+                        WHERE Charity_Count = (SELECT MAX(Charity_Count) FROM CHARITY)    
+                 """
+        df = pd.read_sql(query, conn)
+        charity_count = df.iloc[0]['Charity_Count']
+        charity_name = df['Loser1'].to_list()
+        return charity_count, charity_name     
+    except Exception as e:
+        st.error(f"Error retrieving data: {e}")
+        return None, None  
+
+
+def award_selfdraw(conn):
+    try:
+        query = f"""
+                    WITH SELFDRAW AS (
+                    SELECT Winner
+                          ,COUNT(Winner) AS SD_Count
+                        FROM {TABLE_NAME} 
+                        WHERE WinType = '自摸'
+                        GROUP BY Winner
+                        )
+                    SELECT *
+                        FROM SELFDRAW
+                        WHERE SD_Count = (SELECT MAX(SD_Count) FROM SELFDRAW)    
+                 """
+        df = pd.read_sql(query, conn)
+        self_draw_count = df.iloc[0]['SD_Count']
+        self_draw_name = df['Winner'].to_list()
+        return self_draw_count, self_draw_name     
+    except Exception as e:
+        st.error(f"Error retrieving data: {e}")
+        return None, None 
+
+
 
 # --- PAGE FUNCTIONS ---
 def page_home():
@@ -194,7 +364,7 @@ def page_home():
 
 
         
-
+    #Reset database
     st.divider()
     with st.form("reset_form"):
         RESET_game_button = st.form_submit_button(":material/reset_settings: DOUBLE CLICK TO RESET")
@@ -256,7 +426,8 @@ def page_point_scoring():
         confirm_button_points = st.form_submit_button("OK")
         if confirm_button_points:
             st.session_state['multipler'] = multiplier
-            st.success(f'Multipler set to {multiplier}')
+            st.success(f"Multipler set to ${abs(st.session_state['multipler']):,.2f}")
+    st.write(f"Multiplier is currently set to ${abs(st.session_state['multipler']):,.2f}")
 
 
     default_scoring = {
@@ -299,56 +470,80 @@ def mahjong_calculator():
             st.session_state['calculator_master'].append(winner_x_entry)
             st.session_state['calculator_master'].append(loser1_x_entry)
 
-def mahjong_remove_last_line():
-    try:
-        cursor = conn.cursor()
-        cursor.execute(
-            f"DELETE FROM {TABLE_NAME} WHERE ID = (SELECT MAX(ID) FROM {TABLE_NAME})"
-        )
-        conn.commit()
-    except Exception as e:
-        pass
+def page_awards():
+    st.title(":material/crown: Awards")
+    st.divider()
 
-def results_tile(name, amount):
-    if amount > 0:
-        color = "#10b981"  # Green
-    elif amount == 0:
-        color = "#808080"  #Grey
-    else:
-        color = "#ef4444"  # Red
-    formatted_amount = f"${abs(amount):,.2f}"
-    sign = "+" if amount > 0 else "-" if amount < 0 else ""
+    #Innocent Bystander
+    max_self_draw_loss_count, max_self_draw_loss_name_list = award_innocent_bystander(conn)
+    max_self_draw_loss_name = ''
+    for x in range(0,len(max_self_draw_loss_name_list)):
+        if x == 0:
+            max_self_draw_loss_name = max_self_draw_loss_name_list[x]
+        else:
+            max_self_draw_loss_name += f', {max_self_draw_loss_name_list[x]}'
 
-    st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-left: 4px solid {color};
-            border-radius: 8px;
-            padding: 20px;
-            margin: 10px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 180;
-        ">
-            <div style="
-                font-size: 14px;
-                color: #64748b;
-                font-weight: 500;
-                margin-bottom: 8px;
-            ">{name}</div>
-            <div style="
-                font-size: 32px;
-                color: {color};
-                font-weight: 700;
-            ">{sign}{formatted_amount}</div>
-        </div>
-    """, unsafe_allow_html=True)
+    st.subheader(':material/assist_walker: Innocent Bystander')
+    st.write(f'Number of Games: {max_self_draw_loss_count} | Players: {max_self_draw_loss_name}')
+    st.divider()
+
+    #Arch Nemesis
+    max_arch_nemesis_count, max_arch_nemesis_name_list = award_arch_nemesis(conn)
+    max_arch_nemesis_name = ''
+    for x in range(0,len(max_arch_nemesis_name_list)):
+        if x == 0:
+            max_arch_nemesis_name = max_arch_nemesis_name_list[x]
+        else:
+            max_arch_nemesis_name += f', {max_arch_nemesis_name_list[x]}'   
+    st.subheader(':material/sports_kabaddi: Arch Nemesis')
+    st.write(f'Number of Games: {max_arch_nemesis_count} | Players: {max_arch_nemesis_name}')
+    st.divider()
+
+    #Go Big or Go Home
+    big_boy_count, big_boy_name_list = award_big(conn)
+    big_boy_name = ''
+    for x in range(0,len(big_boy_name_list)):
+        if x == 0:
+            big_boy_name = big_boy_name_list[x]
+        else:
+            big_boy_name += f', {big_boy_name_list[x]}'   
+    st.subheader(':material/trending_up: Go Big or Go Home')
+    st.write(f'Average Points: {big_boy_count:,.2f} | Players: {big_boy_name}')
+    st.divider()
+
+    #Charity Champion
+    charity_count, charity_name_list = award_charity(conn)
+    charity_name = ''
+    for x in range(0,len(charity_name_list)):
+        if x == 0:
+            charity_name = charity_name_list[x]
+        else:
+            charity_name += f', {charity_name_list[x]}'   
+    st.subheader(':material/volunteer_activism: Charity Champion')
+    st.write(f'Games donated: {charity_count:,.2f} | Players: {charity_name}')   
+    st.divider()
+
+    #Self Draw King/Queen
+    self_draw_count, self_draw_name_list = award_selfdraw(conn)
+    self_draw_name = ''
+    for x in range(0,len(self_draw_name_list)):
+        if x == 0:
+            self_draw_name = self_draw_name_list[x]
+        else:
+            self_draw_name += f', {self_draw_name_list[x]}'   
+    st.subheader(':material/self_improvement: Self Draw King/Queen')
+    st.write(f'Games won: {self_draw_count:,.2f} | Players: {self_draw_name}')   
+    st.divider()
+
+
+
 
 # --- MAIN APP ---
 def main():
     selected = option_menu(
         menu_title=None,
-        options=["Calc", "User", "Menu", "Stats"],
-        icons=["calculator", "person", "gear", "bar-chart-line"],
+        options=["Calc", "User", "Menu", "Award"],
+        icons=["calculator", "person", "gear", "award"],
         menu_icon="cast",
         default_index=0,
         orientation="horizontal",
@@ -377,7 +572,10 @@ def main():
         page_point_scoring()
         st.divider()
         st.caption('V1.1.0 © Nelvin Tam')
-
+    elif selected == "Award":
+        page_awards()
+        st.divider()
+        st.caption('V1.1.0 © Nelvin Tam')
     
 
 if __name__ == "__main__":
