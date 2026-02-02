@@ -613,9 +613,9 @@ def main():
         orientation="horizontal",
         styles={
             "container": {"padding": "0!important", "background-color": "#b5b0b0"},
-            "icon": {"color": "#043801", "font-size": "20px"},
+            "icon": {"color": "#043801", "font-size": "28px"},
             "nav-link": {
-                "font-size": "16px",
+                "font-size": "11px",
                 "text-align": "center",
                 "margin": "0px",
                 "--hover-color": "#787474",
