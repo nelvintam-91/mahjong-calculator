@@ -147,7 +147,7 @@ def reset_player(conn2):
  
 def get_player(conn2):
     try:
-        query = f"SELECT * FROM {TABLE_NAME_2} ORDER BY Name"
+        query = f"SELECT DISTINCT Name FROM {TABLE_NAME_2} ORDER BY Name"
         df = pd.read_sql(query, conn2)
         return df
     except Exception as e:
