@@ -43,6 +43,7 @@ def results_tile(name, amount):
 # --- DATABASE CONNECTION ---
 DB_NAME = 'mahjong_app.db'
 TABLE_NAME = 'game_log'
+TABLE_NAME_2 = 'player_name'
 
 @st.cache_resource
 def get_connection():
@@ -61,6 +62,18 @@ def get_connection():
     return conn
 
 conn = get_connection()
+
+@st.cache_resource
+def get_connection_2():
+    conn2 = sqlite3.connect(DB_NAME, check_same_thread=False)
+    conn2.execute(f'''
+        CREATE TABLE IF NOT EXISTS {TABLE_NAME_2} (
+        Name TEXT
+        )
+    ''')
+    return conn2
+
+conn2 = get_connection_2()
 
 # --- DATABASE INTERACTIONS ---
 def add_row(conn, winner, loser1, loser2, loser3, win_type, points):
@@ -114,6 +127,49 @@ def mahjong_remove_last_line():
         conn.commit()
     except Exception as e:
         pass
+
+def reset_player(conn2):
+    default_player_list = [('NEL',),('WAI',),('CAM',),('BOS',),('LIL',),('LIS',),('AMA',),('JEN',)]
+    try:
+        cursor = conn2.cursor()
+        cursor.execute(
+            f"DELETE FROM {TABLE_NAME_2}"
+        )
+        conn2.commit()
+
+        cursor.executemany(
+            f"INSERT INTO {TABLE_NAME_2} (Name) VALUES (?)", 
+            (default_player_list)
+        )
+        conn2.commit()
+    except Exception as e:
+        st.error(f"Error adding row: {e}")
+ 
+def get_player(conn2):
+    try:
+        query = f"SELECT * FROM {TABLE_NAME_2} ORDER BY Name"
+        df = pd.read_sql(query, conn2)
+        return df
+    except Exception as e:
+        st.error(f"Error retrieving data: {e}")
+        return pd.DataFrame()
+
+def add_player(new_player_name):
+    try:
+        new_player_name_cleansed = new_player_name.strip().upper()
+        new_player_name_tuple = [(new_player_name_cleansed,)]
+        cursor = conn2.cursor()
+        cursor.executemany(
+            f"INSERT INTO {TABLE_NAME_2} (Name) VALUES (?)", 
+            (new_player_name_tuple)
+        )
+        conn2.commit()
+        st.success(f'Welcome to the den, {new_player_name_cleansed}.')
+    except Exception as e:
+        st.error(f"Error adding row: {e}")
+
+
+
 
 def award_innocent_bystander(conn):
     try:
@@ -247,7 +303,7 @@ def page_home():
     st.write("Active Players")
     with st.form("active_player_form"):
         st.pills("Select 4 players",
-                       st.session_state['base_player_list_dedup'],
+                       get_player(conn2),
                        key="selected_players",
                        selection_mode='multi',
                        default=None,
@@ -397,19 +453,13 @@ def page_player_settings():
             RESET_button_player_name = st.form_submit_button(":material/reset_settings: Reset")
         
         if ADD_button_player_name:
-            new_player_name_cleansed = new_player_name.strip().upper()
-            if 'base_player_list' not in st.session_state:
-                st.session_state['base_player_list'] = ['NEL','WAI','CAM','BOS','LIL','LIS','AMA','JEN']
-            st.session_state['base_player_list'].append(new_player_name_cleansed)
-            st.success(f'Welcome to the den, {new_player_name_cleansed}.')
+            add_player(new_player_name)
 
         if RESET_button_player_name:
-            st.session_state['base_player_list'] = ['NEL','WAI','CAM','BOS','LIL','LIS','AMA','JEN']
+            reset_player(conn2)
             st.success(f'Reset to default players.')
 
-    st.session_state['base_player_list_dedup'] = list(set(st.session_state['base_player_list']))
-    st.session_state['base_player_list_dedup'].sort()
-    st.session_state['player_df'] = pd.DataFrame(st.session_state['base_player_list_dedup'], columns=["Name"]) 
+    st.session_state['player_df'] = get_player(conn2)
     st.dataframe(st.session_state['player_df'])    
 
 def page_point_scoring():
@@ -595,10 +645,10 @@ def main():
 if __name__ == "__main__":
     #Set up session state tables
     if 'base_player_list_dedup' not in st.session_state:
-        st.session_state['base_player_list_dedup'] = ['NEL','WAI','CAM','BOS','LIL','LIS','AMA','JEN']
+        st.session_state['base_player_list_dedup'] = get_player(conn2)
     st.session_state['base_player_list_dedup'].sort()
     if 'base_player_list' not in st.session_state:
-        st.session_state['base_player_list'] = st.session_state['base_player_list_dedup'] 
+        st.session_state['base_player_list'] = get_player(conn2)
     if 'game_master' not in st.session_state:
         st.session_state['game_master'] = []  
     if 'multipler' not in st.session_state:
