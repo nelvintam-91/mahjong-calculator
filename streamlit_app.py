@@ -646,7 +646,6 @@ if __name__ == "__main__":
     #Set up session state tables
     if 'base_player_list_dedup' not in st.session_state:
         st.session_state['base_player_list_dedup'] = get_player(conn2)
-    st.session_state['base_player_list_dedup'].sort()
     if 'base_player_list' not in st.session_state:
         st.session_state['base_player_list'] = get_player(conn2)
     if 'game_master' not in st.session_state:
